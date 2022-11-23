@@ -17,7 +17,7 @@ Versioning follows the Semantic Versioning guidelines, with major, minor and pat
 Download using git:
 
 ```
-git clone -b release/0.28 --recurse-submodules https://github.com/LeelaChessZero/lc0.git
+git clone -b release/0.28 --recurse-submodules https://github.com/luk-s/lc0.git
 ```
 
 If you have cloned already an old version, fetch, view and checkout a new branch:
