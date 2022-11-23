@@ -138,6 +138,7 @@ class SearchParams {
   float GetMaxCollisionVisitsScalingPower() const {
     return kMaxCollisionVisitsScalingPower;
   }
+  bool GetMctsTreeStats() const { return kMctsTreeStats; }
 
   // Search parameter IDs.
   static const OptionId kMiniBatchSizeId;
@@ -201,6 +202,7 @@ class SearchParams {
   static const OptionId kMaxCollisionVisitsScalingStartId;
   static const OptionId kMaxCollisionVisitsScalingEndId;
   static const OptionId kMaxCollisionVisitsScalingPowerId;
+  static const OptionId kMctsTreeStats;
 
  private:
   const OptionsDict& options_;

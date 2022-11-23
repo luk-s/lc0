@@ -316,6 +316,9 @@ const OptionId SearchParams::kMaxCollisionVisitsScalingEndId{
 const OptionId SearchParams::kMaxCollisionVisitsScalingPowerId{
     "max-collision-visits-scaling-power", "MaxCollisionVisitsScalingPower",
     "Power to apply to the interpolation between 1 and max to make it curved."};
+const OptionId SearchParams::kMctsTreeStatsId{
+    "mcts-tree-stats", "MctsTreeStats",
+    "Power to apply to the interpolation between 1 and max to make it curved."};
 
 void SearchParams::Populate(OptionsParser* options) {
   // Here the uci optimized defaults" are set.
@@ -397,6 +400,7 @@ void SearchParams::Populate(OptionsParser* options) {
   options->Add<IntOption>(kMinimumWorkPerTaskForProcessingId, 1, 100000) = 8;
   options->Add<IntOption>(kIdlingMinimumWorkId, 0, 10000) = 0;
   options->Add<IntOption>(kThreadIdlingThresholdId, 0, 128) = 1;
+  options->Add<BoolOption>(kMctsTreeStatsId) = false;
 
   options->HideOption(kNoiseEpsilonId);
   options->HideOption(kNoiseAlphaId);
@@ -470,7 +474,8 @@ SearchParams::SearchParams(const OptionsDict& options)
                               options.Get<int>(kMiniBatchSizeId)))),
       kNpsLimit(options.Get<float>(kNpsLimitId)),
       kSolidTreeThreshold(options.Get<int>(kSolidTreeThresholdId)),
-      kTaskWorkersPerSearchWorker(options.Get<int>(kTaskWorkersPerSearchWorkerId)),
+      kTaskWorkersPerSearchWorker(
+          options.Get<int>(kTaskWorkersPerSearchWorkerId)),
       kMinimumWorkSizeForProcessing(
           options.Get<int>(kMinimumWorkSizeForProcessingId)),
       kMinimumWorkSizeForPicking(
@@ -486,7 +491,9 @@ SearchParams::SearchParams(const OptionsDict& options)
       kMaxCollisionVisitsScalingEnd(
           options.Get<int>(kMaxCollisionVisitsScalingEndId)),
       kMaxCollisionVisitsScalingPower(
-          options.Get<float>(kMaxCollisionVisitsScalingPowerId)) {
+          options.Get<float>(kMaxCollisionVisitsScalingPowerId)),
+      kMctsTreeStats(options.Get<bool>(kMctsTreeStatsId)),
+{
   if (std::max(std::abs(kDrawScoreSidetomove), std::abs(kDrawScoreOpponent)) +
           std::max(std::abs(kDrawScoreWhite), std::abs(kDrawScoreBlack)) >
       1.0f) {

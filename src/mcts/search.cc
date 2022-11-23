@@ -473,6 +473,27 @@ std::vector<std::string> Search::GetVerboseStats(Node* node) const {
   return infos;
 }
 
+std::vector<std::string> Search::GetMctsTreeStats(Node* node) const {
+  assert(node == root_node_);
+
+  // Some helper functions to make printing easier
+  auto print = [](auto* oss, auto pre, auto v, auto post, auto w, int p = 0) {
+    *oss << pre << std::setw(w) << std::setprecision(p) << v << post;
+  };
+
+  // The result vector.
+  std::vector<std::string> infos;
+
+  // The string stream used do build the result.
+  std::ostringstream oss;
+
+  print(&oss, "(Message: ", "First test successful! :)", ") ", 50);
+
+  // Return the results
+  infos.emplace_back(oss.str());
+  return infos;
+}
+
 void Search::SendMovesStats() const REQUIRES(counters_mutex_) {
   auto move_stats = GetVerboseStats(root_node_);
 
@@ -489,6 +510,25 @@ void Search::SendMovesStats() const REQUIRES(counters_mutex_) {
     LOGFILE << "=== Move stats:";
     for (const auto& line : move_stats) LOGFILE << line;
   }
+
+  // TODO: Process the MCTS tree stats
+  auto mcts_tree_stats = GetMctsTreeStats(root_node_);
+
+  // TODO: What does this code do and is it correct?
+  if (params_.GetMctsTreeStats()) {
+    std::vector<ThinkingInfo> infos;
+    std::transform(mcts_tree_stats.begin(), mcts_tree_stats.end(),
+                   std::back_inserter(infos), [](const std::string& line) {
+                     ThinkingInfo info;
+                     info.comment = line;
+                     return info;
+                   });
+    uci_responder_->OutputThinkingInfo(&infos);
+  } else {
+    LOGFILE << "=== MCTS tree stats:";
+    for (const auto& line : mcts_tree_stats) LOGFILE << line;
+  }
+
   for (auto& edge : root_node_->Edges()) {
     if (!(edge.GetMove(played_history_.IsBlackToMove()) == final_bestmove_)) {
       continue;

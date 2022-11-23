@@ -133,6 +133,10 @@ class Search {
   // Node can only be root or ponder (depth 1).
   std::vector<std::string> GetVerboseStats(Node* node) const;
 
+  // Returns verbose information about the entire MCTS tree, as vector of
+  // strings.
+  std::vector<std::string> GetMctsTreeStats(Node* root) const;
+
   // Returns the draw score at the root of the search. At odd depth pass true to
   // the value of @is_odd_depth to change the sign of the draw score.
   // Depth of a root node is 0 (even number).
