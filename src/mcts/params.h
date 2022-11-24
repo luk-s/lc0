@@ -138,9 +138,7 @@ class SearchParams {
   float GetMaxCollisionVisitsScalingPower() const {
     return kMaxCollisionVisitsScalingPower;
   }
-  bool GetMctsTreeStats() const {
-    return return options_.Get<bool>(kMctsTreeStatsId);
-  }
+  bool GetMctsTreeStats() const { return options_.Get<bool>(kMctsTreeStatsId); }
 
   // Search parameter IDs.
   static const OptionId kMiniBatchSizeId;
