@@ -497,9 +497,10 @@ std::vector<std::string> Search::GetMctsNodeStats(
   auto print = [](auto* oss, auto pre, auto v, auto post, auto w, int p = 0) {
     *oss << pre << std::setw(w) << std::setprecision(p) << v << post;
   };
-  auto print_head = [&](auto* oss, auto label, int i, auto n, auto f, auto p) {
+  auto print_head = [&](auto* oss, std::string prefix, auto label, int i,
+                        auto n, auto f, auto p) {
     *oss << std::fixed;
-    print(oss, "", label, " ", 5);
+    print(oss, "", prefix + label, " ", 15);
     print(oss, "(", i, ") ", 4);
     *oss << std::right;
     print(oss, "(N: ", n, ") ", 7);
@@ -549,15 +550,15 @@ std::vector<std::string> Search::GetMctsNodeStats(
   std::vector<std::string> infos;
 
   // Mark the start of the current node.
-  infos.emplace_back("===START NODE===");
+  infos.emplace_back("TREE INFO START NODE");
 
   if (is_root) {
     // Get the FEN of the current position.
     const Position& current_position = played_history_.Last();
-    infos.emplace_back("POSITION: " + GetFen(current_position));
+    infos.emplace_back("TREE INFO POSITION: " + GetFen(current_position));
   } else {
     // Get a list of moves from the root to the current node.
-    std::string path_str = "POSITION: fen +";
+    std::string path_str = "TREE INFO POSITION: fen + ";
     std::vector<Edge*>::iterator edge;
     for (edge = edge_path->begin(); edge != edge_path->end(); ++edge) {
       path_str += (*edge)->GetMove(is_black_to_move).as_string() + " +";
@@ -575,7 +576,7 @@ std::vector<std::string> Search::GetMctsNodeStats(
     std::ostringstream oss;
     oss << std::left;
     // TODO: should this be displaying transformed index?
-    print_head(&oss, edge.GetMove(is_black_to_move).as_string(),
+    print_head(&oss, "TREE INFO ", edge.GetMove(is_black_to_move).as_string(),
                edge.GetMove().as_nn_index(0), edge.GetN(), edge.GetNInFlight(),
                edge.GetP());
     print_stats(&oss, edge.node());
@@ -587,14 +588,14 @@ std::vector<std::string> Search::GetMctsNodeStats(
 
   // Include stats about the node in similar format to its children above.
   std::ostringstream oss;
-  print_head(&oss, "node ", node->GetNumEdges(), node->GetN(),
+  print_head(&oss, "TREE INFO ", "node ", node->GetNumEdges(), node->GetN(),
              node->GetNInFlight(), node->GetVisitedPolicy());
   print_stats(&oss, node);
   print_tail(&oss, node);
   infos.emplace_back(oss.str());
 
   // Mark the end of the current node.
-  infos.emplace_back("===END NODE===");
+  infos.emplace_back("TREE INFO END NODE");
   return infos;
 }
 
