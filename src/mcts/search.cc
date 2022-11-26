@@ -500,7 +500,7 @@ std::vector<std::string> Search::GetMctsNodeStats(
   auto print_head = [&](auto* oss, std::string prefix, auto label, int i,
                         auto n, auto f, auto p) {
     *oss << std::fixed;
-    print(oss, "", prefix + "(move:" label, ") ", 20);
+    print(oss, "", prefix + "(move:" + label, ") ", 20);
     *oss << std::right;
     print(oss, "(N: ", n, ") ", 7);
     print(oss, "(IN_FLIGHT: +", f, ") ", 2);
