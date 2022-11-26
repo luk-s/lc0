@@ -473,11 +473,11 @@ std::vector<std::string> Search::GetVerboseStats(Node* node) const {
   return infos;
 }
 
-std::vector<std::string> Search::GetMctsNodeStats(
-    Node* node, std::vector<Edge*>* edge_path) const {
+std::vector<std::string> Search::GetMctsNodeStats(Node* node,
+                                                  std::vector<Edge*>* edge_path,
+                                                  bool black_to_move) const {
   const bool is_root = (node == root_node_);
   const bool is_odd_depth = !is_root;
-  const bool is_black_to_move = (played_history_.IsBlackToMove() == is_root);
   const float draw_score = GetDrawScore(is_odd_depth);
   const float fpu = GetFpu(params_, node, is_root, draw_score);
   const float cpuct = ComputeCpuct(params_, node->GetN(), is_root);
@@ -561,12 +561,12 @@ std::vector<std::string> Search::GetMctsNodeStats(
     std::vector<Edge*>::iterator edge;
 
     // This variable is used to keep track of which player is to move.
-    int64_t edge_counter = 0;
+    bool black_to_move_iter = black_to_move;
 
     // Iterate through the edge path and add the moves to the path string.
     for (edge = edge_path->begin(); edge != edge_path->end(); ++edge) {
-      path_str += (*edge)->GetMove(edge_counter % 2 == 1).as_string() + " + ";
-      edge_counter++;
+      path_str += (*edge)->GetMove(black_to_move_iter).as_string() + " + ";
+      black_to_move_iter = !black_to_move_iter;
     }
     // Remove last "+" from the string.
     path_str.pop_back();
@@ -584,7 +584,7 @@ std::vector<std::string> Search::GetMctsNodeStats(
     std::ostringstream oss;
     oss << std::left;
     // TODO: should this be displaying transformed index?
-    print_head(&oss, "TREE INFO ", edge.GetMove(is_black_to_move).as_string(),
+    print_head(&oss, "TREE INFO ", edge.GetMove(black_to_move).as_string(),
                edge.GetMove().as_nn_index(0), edge.GetN(), edge.GetNInFlight(),
                edge.GetP());
     print_stats(&oss, edge.node());
@@ -607,8 +607,9 @@ std::vector<std::string> Search::GetMctsNodeStats(
   return infos;
 }
 
-std::vector<std::string> Search::GetMctsTreeStats(
-    Node* node, std::vector<Edge*>* edge_path) const {
+std::vector<std::string> Search::GetMctsTreeStats(Node* node,
+                                                  std::vector<Edge*>* edge_path,
+                                                  bool black_to_move) const {
   // The result vector.
   std::vector<std::string> infos;
 
@@ -618,7 +619,8 @@ std::vector<std::string> Search::GetMctsTreeStats(
   }
 
   // Get information about the current node.
-  std::vector<std::string> node_info = GetMctsNodeStats(node, edge_path);
+  std::vector<std::string> node_info =
+      GetMctsNodeStats(node, edge_path, black_to_move);
 
   // Copy the information about the current node to the result vector.
   std::copy(node_info.begin(), node_info.end(), std::back_inserter(infos));
@@ -630,7 +632,8 @@ std::vector<std::string> Search::GetMctsTreeStats(
 
     // Recursively call this function to get information about the child node
     // and its entire subtree.
-    std::vector<std::string> child_info = GetMctsTreeStats(child, edge_path);
+    std::vector<std::string> child_info =
+        GetMctsTreeStats(child, edge_path, !black_to_move);
 
     // Copy the information about the child to the result vector.
     std::copy(child_info.begin(), child_info.end(), std::back_inserter(infos));
@@ -653,7 +656,8 @@ void Search::SendMovesStats() const REQUIRES(counters_mutex_) {
   std::vector<Edge*>* edge_path = new std::vector<Edge*>();
 
   // Gather information about the tree.
-  auto mcts_tree_stats = GetMctsTreeStats(root_node_, edge_path);
+  black_to_move = played_history_.Last().IsBlackToMove();
+  auto mcts_tree_stats = GetMctsTreeStats(root_node_, edge_path, black_to_move);
 
   // Send the information to the client.
   if (params_.GetMctsTreeStats()) {
