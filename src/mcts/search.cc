@@ -565,7 +565,7 @@ std::vector<std::string> Search::GetMctsNodeStats(
 
     // Iterate through the edge path and add the moves to the path string.
     for (edge = edge_path->begin(); edge != edge_path->end(); ++edge) {
-      path_str += (*edge)->GetMove(edge_counter % 2 == 0).as_string() + " + ";
+      path_str += (*edge)->GetMove(edge_counter % 2 == 1).as_string() + " + ";
       edge_counter++;
     }
     // Remove last "+" from the string.
