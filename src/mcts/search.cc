@@ -500,8 +500,7 @@ std::vector<std::string> Search::GetMctsNodeStats(
   auto print_head = [&](auto* oss, std::string prefix, auto label, int i,
                         auto n, auto f, auto p) {
     *oss << std::fixed;
-    print(oss, "", prefix + label, " ", 15);
-    print(oss, "(", i, ") ", 4);
+    print(oss, "", prefix + "(move:" label, ") ", 20);
     *oss << std::right;
     print(oss, "(N: ", n, ") ", 7);
     print(oss, "(IN_FLIGHT: +", f, ") ", 2);
@@ -561,7 +560,7 @@ std::vector<std::string> Search::GetMctsNodeStats(
     std::string path_str = "TREE INFO POSITION: fen + ";
     std::vector<Edge*>::iterator edge;
     for (edge = edge_path->begin(); edge != edge_path->end(); ++edge) {
-      path_str += (*edge)->GetMove(is_black_to_move).as_string() + " +";
+      path_str += (*edge)->GetMove(is_black_to_move).as_string() + " + ";
     }
     path_str.pop_back();
     infos.emplace_back(path_str);
