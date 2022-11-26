@@ -656,7 +656,7 @@ void Search::SendMovesStats() const REQUIRES(counters_mutex_) {
   std::vector<Edge*>* edge_path = new std::vector<Edge*>();
 
   // Gather information about the tree.
-  black_to_move = played_history_.Last().IsBlackToMove();
+  bool black_to_move = played_history_.Last().IsBlackToMove();
   auto mcts_tree_stats = GetMctsTreeStats(root_node_, edge_path, black_to_move);
 
   // Send the information to the client.
