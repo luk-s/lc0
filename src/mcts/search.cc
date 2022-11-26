@@ -631,7 +631,7 @@ std::vector<std::string> Search::GetMctsTreeStats(
 
 void Search::SendMovesStats() const REQUIRES(counters_mutex_) {
   // Allocate a vector to hold the edge path
-  std::vector<Edge>* edge_path = new std::vector<Edge>();
+  std::vector<Edge*>* edge_path = new std::vector<Edge*>();
 
   // Gather information about the tree.
   auto mcts_tree_stats = GetMctsTreeStats(root_node_, edge_path);
