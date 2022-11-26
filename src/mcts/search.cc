@@ -474,7 +474,7 @@ std::vector<std::string> Search::GetVerboseStats(Node* node) const {
 }
 
 std::vector<std::string> Search::GetMctsNodeStats(
-    Node* node, std::vector<Edge>* edge_path) const {
+    Node* node, std::vector<Edge*>* edge_path) const {
   const bool is_root = (node == root_node_);
   const bool is_odd_depth = !is_root;
   const bool is_black_to_move = (played_history_.IsBlackToMove() == is_root);
@@ -558,8 +558,9 @@ std::vector<std::string> Search::GetMctsNodeStats(
   } else {
     // Get a list of moves from the root to the current node.
     std::string path_str = "POSITION: fen +";
-    for (Edge* edge : *edge_path) {
-      path_str += edge->GetMove(is_black_to_move).as_string() + " +";
+    std::vector<Edge*>::iterator edge;
+    for (edge = edge_path->begin(); edge != edge_path->end(); ++edge) {
+      path_str += (*edge)->GetMove(is_black_to_move).as_string() + " +";
     }
     path_str.pop_back();
     infos.emplace_back(path_str);
@@ -598,7 +599,7 @@ std::vector<std::string> Search::GetMctsNodeStats(
 }
 
 std::vector<std::string> Search::GetMctsTreeStats(
-    Node* node, std::vector<Edge>* edge_path) const {
+    Node* node, std::vector<Edge*>* edge_path) const {
   // The result vector.
   std::vector<std::string> infos;
 

@@ -134,13 +134,13 @@ class Search {
   std::vector<std::string> GetVerboseStats(Node* node) const;
 
   // Returns verbose information about given node, as a single string.
-  std::vector<std::string> GetMctsNodeStats(Node* node,
-                                            std::vector<Edge>* edge_path) const;
+  std::vector<std::string> GetMctsNodeStats(
+      Node* node, std::vector<Edge*>* edge_path) const;
 
   // Returns verbose information about the entire MCTS tree, as vector of
   // strings.
-  std::vector<std::string> GetMctsTreeStats(Node* root,
-                                            std::vector<Edge>* edge_path) const;
+  std::vector<std::string> GetMctsTreeStats(
+      Node* root, std::vector<Edge*>* edge_path) const;
 
   // Returns the draw score at the root of the search. At odd depth pass true to
   // the value of @is_odd_depth to change the sign of the draw score.
