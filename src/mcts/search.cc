@@ -559,10 +559,19 @@ std::vector<std::string> Search::GetMctsNodeStats(
     // Get a list of moves from the root to the current node.
     std::string path_str = "TREE INFO POSITION: fen + ";
     std::vector<Edge*>::iterator edge;
+
+    // This variable is used to keep track of which player is to move.
+    int64_t edge_counter = 0;
+
+    // Iterate through the edge path and add the moves to the path string.
     for (edge = edge_path->begin(); edge != edge_path->end(); ++edge) {
-      path_str += (*edge)->GetMove(is_black_to_move).as_string() + " + ";
+      path_str += (*edge)->GetMove(edge_counter % 2 == 0).as_string() + " + ";
+      edge_counter++;
     }
+    // Remove last "+" from the string.
     path_str.pop_back();
+    path_str.pop_back();
+
     infos.emplace_back(path_str);
   }
 
