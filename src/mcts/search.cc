@@ -473,21 +473,134 @@ std::vector<std::string> Search::GetVerboseStats(Node* node) const {
   return infos;
 }
 
-std::vector<std::string> Search::GetMctsTreeStats(Node* node) const {
-  assert(node == root_node_);
+std::vector<std::string> Search::GetMctsNodeStats(Node* node) const {
+  const bool is_root = (node == root_node_);
+  const bool is_odd_depth = !is_root;
+  const bool is_black_to_move = (played_history_.IsBlackToMove() == is_root);
+  const float draw_score = GetDrawScore(is_odd_depth);
+  const float fpu = GetFpu(params_, node, is_root, draw_score);
+  const float cpuct = ComputeCpuct(params_, node->GetN(), is_root);
+  const float U_coeff =
+      cpuct * std::sqrt(std::max(node->GetChildrenVisits(), 1u));
+  std::vector<EdgeAndNode> edges;
+  for (const auto& edge : node->Edges()) edges.push_back(edge);
 
-  // Some helper functions to make printing easier
+  std::sort(edges.begin(), edges.end(),
+            [&fpu, &U_coeff, &draw_score](EdgeAndNode a, EdgeAndNode b) {
+              return std::forward_as_tuple(
+                         a.GetN(), a.GetQ(fpu, draw_score) + a.GetU(U_coeff)) <
+                     std::forward_as_tuple(
+                         b.GetN(), b.GetQ(fpu, draw_score) + b.GetU(U_coeff));
+            });
+
   auto print = [](auto* oss, auto pre, auto v, auto post, auto w, int p = 0) {
     *oss << pre << std::setw(w) << std::setprecision(p) << v << post;
   };
+  auto print_head = [&](auto* oss, auto label, int i, auto n, auto f, auto p) {
+    *oss << std::fixed;
+    print(oss, "", label, " ", 5);
+    print(oss, "(", i, ") ", 4);
+    *oss << std::right;
+    print(oss, "N: ", n, " ", 7);
+    print(oss, "(+", f, ") ", 2);
+    print(oss, "(P: ", p * 100, "%) ", 5, p >= 0.99995f ? 1 : 2);
+  };
+  auto print_stats = [&](auto* oss, const auto* n) {
+    const auto sign = n == node ? -1 : 1;
+    if (n) {
+      print(oss, "(WL: ", sign * n->GetWL(), ") ", 8, 5);
+      print(oss, "(D: ", n->GetD(), ") ", 5, 3);
+      print(oss, "(M: ", n->GetM(), ") ", 4, 1);
+    } else {
+      *oss << "(WL:  -.-----) (D: -.---) (M:  -.-) ";
+    }
+    print(oss, "(Q: ", n ? sign * n->GetQ(sign * draw_score) : fpu, ") ", 8, 5);
+  };
+  auto print_tail = [&](auto* oss, const auto* n) {
+    const auto sign = n == node ? -1 : 1;
+    std::optional<float> v;
+    if (n && n->IsTerminal()) {
+      v = n->GetQ(sign * draw_score);
+    } else {
+      NNCacheLock nneval = GetCachedNNEval(n);
+      if (nneval) v = -nneval->q;
+    }
+    if (v) {
+      print(oss, "(V: ", sign * *v, ") ", 7, 4);
+    } else {
+      *oss << "(V:  -.----) ";
+    }
 
+    if (n) {
+      auto [lo, up] = n->GetBounds();
+      if (sign == -1) {
+        lo = -lo;
+        up = -up;
+        std::swap(lo, up);
+      }
+      *oss << (lo == up                                                ? "(T) "
+               : lo == GameResult::DRAW && up == GameResult::WHITE_WON ? "(W) "
+               : lo == GameResult::BLACK_WON && up == GameResult::DRAW ? "(L) "
+                                                                       : "");
+    }
+  };
+
+  std::vector<std::string> infos;
+
+  // Mark the start of the current node.
+  infos.emplace_back("===START NODE===");
+
+  const auto m_evaluator = network_->GetCapabilities().has_mlh()
+                               ? MEvaluator(params_, node)
+                               : MEvaluator();
+  for (const auto& edge : edges) {
+    float Q = edge.GetQ(fpu, draw_score);
+    float M = m_evaluator.GetM(edge, Q);
+    std::ostringstream oss;
+    oss << std::left;
+    // TODO: should this be displaying transformed index?
+    print_head(&oss, edge.GetMove(is_black_to_move).as_string(),
+               edge.GetMove().as_nn_index(0), edge.GetN(), edge.GetNInFlight(),
+               edge.GetP());
+    print_stats(&oss, edge.node());
+    print(&oss, "(U: ", edge.GetU(U_coeff), ") ", 6, 5);
+    print(&oss, "(S: ", Q + edge.GetU(U_coeff) + M, ") ", 8, 5);
+    print_tail(&oss, edge.node());
+    infos.emplace_back(oss.str());
+  }
+
+  // Include stats about the node in similar format to its children above.
+  std::ostringstream oss;
+  print_head(&oss, "node ", node->GetNumEdges(), node->GetN(),
+             node->GetNInFlight(), node->GetVisitedPolicy());
+  print_stats(&oss, node);
+  print_tail(&oss, node);
+  infos.emplace_back(oss.str());
+
+  // Mark the end of the current node.
+  infos.emplace_back("===END NODE===");
+  return infos;
+}
+
+std::vector<std::string> Search::GetMctsTreeStats(Node* node) const {
   // The result vector.
   std::vector<std::string> infos;
 
-  // The string stream used do build the result.
-  std::ostringstream oss;
+  // Get information about the current node.
+  std::vector<std::string> node_info = GetMctsNodeStats(node);
 
-  print(&oss, "(Message: ", "First test successful! :)", ") ", 50);
+  // Copy the information about the current node to the result vector.
+  std::copy(node_info.begin(), node_info.end(), std::back_inserter(infos));
+
+  // Iterate over all children of the node.
+  for (Node* child : node->VisitedNodes()) {
+    // Recursively call this function to get information about the child node
+    // and its entire subtree.
+    std::vector<std::string> child_info = GetMctsTreeStats(child);
+
+    // Copy the information about the child to the result vector.
+    std::copy(child_info.begin(), child_info.end(), std::back_inserter(infos));
+  }
 
   // Return the results
   infos.emplace_back(oss.str());
@@ -495,6 +608,23 @@ std::vector<std::string> Search::GetMctsTreeStats(Node* node) const {
 }
 
 void Search::SendMovesStats() const REQUIRES(counters_mutex_) {
+  // TODO: Process the MCTS tree stats
+  auto mcts_tree_stats = GetMctsTreeStats(root_node_);
+
+  if (params_.GetMctsTreeStats()) {
+    std::vector<ThinkingInfo> infos;
+    std::transform(mcts_tree_stats.begin(), mcts_tree_stats.end(),
+                   std::back_inserter(infos), [](const std::string& line) {
+                     ThinkingInfo info;
+                     info.comment = line;
+                     return info;
+                   });
+    uci_responder_->OutputThinkingInfo(&infos);
+  } else {
+    LOGFILE << "=== MCTS tree stats:";
+    for (const auto& line : mcts_tree_stats) LOGFILE << line;
+  }
+
   auto move_stats = GetVerboseStats(root_node_);
 
   if (params_.GetVerboseStats()) {
@@ -509,24 +639,6 @@ void Search::SendMovesStats() const REQUIRES(counters_mutex_) {
   } else {
     LOGFILE << "=== Move stats:";
     for (const auto& line : move_stats) LOGFILE << line;
-  }
-
-  // TODO: Process the MCTS tree stats
-  auto mcts_tree_stats = GetMctsTreeStats(root_node_);
-
-  // TODO: What does this code do and is it correct?
-  if (params_.GetMctsTreeStats()) {
-    std::vector<ThinkingInfo> infos;
-    std::transform(mcts_tree_stats.begin(), mcts_tree_stats.end(),
-                   std::back_inserter(infos), [](const std::string& line) {
-                     ThinkingInfo info;
-                     info.comment = line;
-                     return info;
-                   });
-    uci_responder_->OutputThinkingInfo(&infos);
-  } else {
-    LOGFILE << "=== MCTS tree stats:";
-    for (const auto& line : mcts_tree_stats) LOGFILE << line;
   }
 
   for (auto& edge : root_node_->Edges()) {

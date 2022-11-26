@@ -318,7 +318,7 @@ const OptionId SearchParams::kMaxCollisionVisitsScalingPowerId{
     "Power to apply to the interpolation between 1 and max to make it curved."};
 const OptionId SearchParams::kMctsTreeStatsId{
     "mcts-tree-stats", "MctsTreeStats",
-    "Power to apply to the interpolation between 1 and max to make it curved."};
+    "If true, print out the MCTS tree at the end of the search."};
 
 void SearchParams::Populate(OptionsParser* options) {
   // Here the uci optimized defaults" are set.
