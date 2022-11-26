@@ -473,7 +473,8 @@ std::vector<std::string> Search::GetVerboseStats(Node* node) const {
   return infos;
 }
 
-std::vector<std::string> Search::GetMctsNodeStats(Node* node) const {
+std::vector<std::string> Search::GetMctsNodeStats(
+    Node* node, std::vector<Edge>* edge_path) const {
   const bool is_root = (node == root_node_);
   const bool is_odd_depth = !is_root;
   const bool is_black_to_move = (played_history_.IsBlackToMove() == is_root);
@@ -501,8 +502,8 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node) const {
     print(oss, "", label, " ", 5);
     print(oss, "(", i, ") ", 4);
     *oss << std::right;
-    print(oss, "N: ", n, " ", 7);
-    print(oss, "(+", f, ") ", 2);
+    print(oss, "(N: ", n, ") ", 7);
+    print(oss, "(IN_FLIGHT: +", f, ") ", 2);
     print(oss, "(P: ", p * 100, "%) ", 5, p >= 0.99995f ? 1 : 2);
   };
   auto print_stats = [&](auto* oss, const auto* n) {
@@ -550,6 +551,20 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node) const {
   // Mark the start of the current node.
   infos.emplace_back("===START NODE===");
 
+  if (is_root) {
+    // Get the FEN of the current position.
+    const Position& current_position = played_history_.Last();
+    infos.emplace_back("POSITION: " + GetFen(current_position));
+  } else {
+    // Get a list of moves from the root to the current node.
+    std::string path_str = "POSITION: fen +";
+    for (Edge* edge : *edge_path) {
+      path_str += edge->GetMove(is_black_to_move).as_string() + " +";
+    }
+    path_str.pop_back();
+    infos.emplace_back(path_str);
+  }
+
   const auto m_evaluator = network_->GetCapabilities().has_mlh()
                                ? MEvaluator(params_, node)
                                : MEvaluator();
@@ -582,24 +597,31 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node) const {
   return infos;
 }
 
-std::vector<std::string> Search::GetMctsTreeStats(Node* node) const {
+std::vector<std::string> Search::GetMctsTreeStats(
+    Node* node, std::vector<Edge>* edge_path) const {
   // The result vector.
   std::vector<std::string> infos;
 
   // Get information about the current node.
-  std::vector<std::string> node_info = GetMctsNodeStats(node);
+  std::vector<std::string> node_info = GetMctsNodeStats(node, edge_path);
 
   // Copy the information about the current node to the result vector.
   std::copy(node_info.begin(), node_info.end(), std::back_inserter(infos));
 
   // Iterate over all children of the node.
   for (Node* child : node->VisitedNodes()) {
+    // Append the edge leading to the child to the edge path.
+    edge_path->push_back(node->GetEdgeToNode(child));
+
     // Recursively call this function to get information about the child node
     // and its entire subtree.
-    std::vector<std::string> child_info = GetMctsTreeStats(child);
+    std::vector<std::string> child_info = GetMctsTreeStats(child, edge_path);
 
     // Copy the information about the child to the result vector.
     std::copy(child_info.begin(), child_info.end(), std::back_inserter(infos));
+
+    // Remove the edge leading to the child from the edge path.
+    edge_path->pop_back();
   }
 
   // Return the results
@@ -607,9 +629,13 @@ std::vector<std::string> Search::GetMctsTreeStats(Node* node) const {
 }
 
 void Search::SendMovesStats() const REQUIRES(counters_mutex_) {
-  // TODO: Process the MCTS tree stats
-  auto mcts_tree_stats = GetMctsTreeStats(root_node_);
+  // Allocate a vector to hold the edge path
+  std::vector<Edge>* edge_path = new std::vector<Edge>();
 
+  // Gather information about the tree.
+  auto mcts_tree_stats = GetMctsTreeStats(root_node_, edge_path);
+
+  // Send the information to the client.
   if (params_.GetMctsTreeStats()) {
     std::vector<ThinkingInfo> infos;
     std::transform(mcts_tree_stats.begin(), mcts_tree_stats.end(),
@@ -624,8 +650,13 @@ void Search::SendMovesStats() const REQUIRES(counters_mutex_) {
     for (const auto& line : mcts_tree_stats) LOGFILE << line;
   }
 
+  // Free the edge path vector.
+  delete edge_path;
+
+  // Get information about the current node.
   auto move_stats = GetVerboseStats(root_node_);
 
+  // Send the information to the client.
   if (params_.GetVerboseStats()) {
     std::vector<ThinkingInfo> infos;
     std::transform(move_stats.begin(), move_stats.end(),
