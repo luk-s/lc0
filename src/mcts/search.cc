@@ -604,6 +604,11 @@ std::vector<std::string> Search::GetMctsTreeStats(
   // The result vector.
   std::vector<std::string> infos;
 
+  // Mark the start of the tree search
+  if (node == root_node_) {
+    infos.emplace_back("TREE INFO START TREE");
+  }
+
   // Get information about the current node.
   std::vector<std::string> node_info = GetMctsNodeStats(node, edge_path);
 
@@ -624,6 +629,11 @@ std::vector<std::string> Search::GetMctsTreeStats(
 
     // Remove the edge leading to the child from the edge path.
     edge_path->pop_back();
+  }
+
+  // Mark the end of the tree search
+  if (node == root_node_) {
+    infos.emplace_back("TREE INFO END TREE");
   }
 
   // Return the results
