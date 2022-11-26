@@ -133,6 +133,9 @@ class Search {
   // Node can only be root or ponder (depth 1).
   std::vector<std::string> GetVerboseStats(Node* node) const;
 
+  // Returns verbose information about given node, as a single string.
+  std::vector<std::string> GetMctsNodeStats(Node* node) const;
+
   // Returns verbose information about the entire MCTS tree, as vector of
   // strings.
   std::vector<std::string> GetMctsTreeStats(Node* root) const;

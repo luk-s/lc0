@@ -603,7 +603,6 @@ std::vector<std::string> Search::GetMctsTreeStats(Node* node) const {
   }
 
   // Return the results
-  infos.emplace_back(oss.str());
   return infos;
 }
 
