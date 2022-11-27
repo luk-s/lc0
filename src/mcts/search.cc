@@ -550,6 +550,7 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node,
 
   // Mark the start of the current node.
   infos.emplace_back("TREE INFO START NODE");
+  infos.emplace_back("IS BLACK TO PLAY? " + std::to_string(black_to_move));
 
   if (is_root) {
     // Get the FEN of the current position.
@@ -562,10 +563,11 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node,
 
     // This variable is used to keep track of which player is to move.
     bool black_to_move_iter = black_to_move;
+    if (edge_path.size() % 2 == 1) black_to_move_iter = !black_to_move_iter;
 
     // Iterate through the edge path and add the moves to the path string.
     for (edge = edge_path->begin(); edge != edge_path->end(); ++edge) {
-      path_str += (*edge)->GetMove().as_string() + " + ";
+      path_str += (*edge)->GetMove(black_to_move_iter).as_string() + " + ";
       black_to_move_iter = !black_to_move_iter;
     }
     // Remove last "+" from the string.
