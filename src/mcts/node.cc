@@ -232,6 +232,18 @@ Edge* Node::GetEdgeToNode(const Node* node) const {
 
 Edge* Node::GetOwnEdge() const { return GetParent()->GetEdgeToNode(this); }
 
+void Node::ChangeDebugVisitedFlag(bool value, bool recursive) {
+  if (recursive) {
+    // Iterate over all children of the node.
+    for (Node* child : node->VisitedNodes()) {
+      if (child->GetDebugVisited() != value) {
+        child->ChangeDebugVisitedFlag(value, recursive);
+      }
+    }
+  }
+  debug_visited_ = value;
+}
+
 std::string Node::DebugString() const {
   std::ostringstream oss;
   oss << " Term:" << static_cast<int>(terminal_type_) << " This:" << this
@@ -240,8 +252,7 @@ std::string Node::DebugString() const {
       << " WL:" << wl_ << " N:" << n_ << " N_:" << n_in_flight_
       << " Edges:" << static_cast<int>(num_edges_)
       << " Bounds:" << static_cast<int>(lower_bound_) - 2 << ","
-      << static_cast<int>(upper_bound_) - 2
-      << " Solid:" << solid_children_;
+      << static_cast<int>(upper_bound_) - 2 << " Solid:" << solid_children_;
   return oss.str();
 }
 
@@ -278,7 +289,8 @@ bool Node::MakeSolid() {
   while (old_child) {
     int index = old_child->index_;
     new_children[index] = std::move(*old_child.get());
-    // This isn't needed, but it helps crash things faster if something has gone wrong.
+    // This isn't needed, but it helps crash things faster if something has gone
+    // wrong.
     old_child->parent_ = nullptr;
     gNodeGc.AddToGcQueue(std::move(old_child));
     new_children[index].UpdateChildrenParents();
@@ -353,9 +365,7 @@ bool Node::TryStartScoreUpdate() {
   return true;
 }
 
-void Node::CancelScoreUpdate(int multivisit) {
-  n_in_flight_ -= multivisit;
-}
+void Node::CancelScoreUpdate(int multivisit) { n_in_flight_ -= multivisit; }
 
 void Node::FinalizeScoreUpdate(float v, float d, float m, int multivisit) {
   // Recompute Q.

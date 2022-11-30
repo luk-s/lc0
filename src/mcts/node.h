@@ -249,6 +249,21 @@ class Node {
   // Debug information about the node.
   std::string DebugString() const;
 
+  // Returns whether the nod has already been visited
+  bool GetDebugVisited() const { return debug_visited_; }
+  // Changes the visited flag (if necessary recursively)
+  void ChangeDebugVisitedFlag(bool value, bool recursive = true);
+
+  // Sets the visited flag to true
+  void SetDebugVisited(bool recursive) {
+    ChangeDebugVisitedFlag(true, recursive);
+  }
+
+  // Recursively unsets the visited flag to false
+  void UnsetDebugVisited(bool recursive) {
+    ChangeDebugVisitedFlag(false, recursive);
+  }
+
   // Reallocates this nodes children to be in a solid block, if possible and not
   // already done. Returns true if the transformation was performed.
   bool MakeSolid();
@@ -334,6 +349,8 @@ class Node {
   GameResult upper_bound_ : 2;
   // Whether the child_ is actually an array of equal length to edges.
   bool solid_children_ : 1;
+  // Whether this node has already been visited.
+  bool debug_visited_ = false;
 
   // TODO(mooskagh) Unfriend NodeTree.
   friend class NodeTree;

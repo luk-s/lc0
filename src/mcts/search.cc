@@ -632,13 +632,18 @@ std::vector<std::string> Search::GetMctsTreeStats(Node* node,
     // Append the edge leading to the child to the edge path.
     edge_path->push_back(node->GetEdgeToNode(child));
 
-    // Recursively call this function to get information about the child node
-    // and its entire subtree.
-    std::vector<std::string> child_info =
-        GetMctsTreeStats(child, edge_path, !black_to_move);
+    // If the child node has not yet been visited, recursively call this
+    // function to get information about the child node and its entire subtree.
+    if (child->GetDebugVisited() == false) {
+      std::vector<std::string> child_info =
+          GetMctsTreeStats(child, edge_path, !black_to_move);
 
-    // Copy the information about the child to the result vector.
-    std::copy(child_info.begin(), child_info.end(), std::back_inserter(infos));
+      // Copy the information about the child to the result vector.
+      std::copy(child_info.begin(), child_info.end(),
+                std::back_inserter(infos));
+
+      child->SetDebugVisited(false);
+    }
 
     // Remove the edge leading to the child from the edge path.
     edge_path->pop_back();
@@ -647,6 +652,7 @@ std::vector<std::string> Search::GetMctsTreeStats(Node* node,
   // Mark the end of the tree search
   if (node == root_node_) {
     infos.emplace_back("TREE INFO END TREE");
+    node->UnsetDebugVisited(true);
   }
 
   // Return the results
