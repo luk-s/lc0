@@ -235,7 +235,7 @@ Edge* Node::GetOwnEdge() const { return GetParent()->GetEdgeToNode(this); }
 void Node::ChangeDebugVisitedFlag(bool value, bool recursive) {
   if (recursive) {
     // Iterate over all children of the node.
-    for (Node* child : node->VisitedNodes()) {
+    for (Node* child : VisitedNodes()) {
       if (child->GetDebugVisited() != value) {
         child->ChangeDebugVisitedFlag(value, recursive);
       }
