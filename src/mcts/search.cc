@@ -539,10 +539,12 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node,
         up = -up;
         std::swap(lo, up);
       }
-      *oss << (lo == up                                                ? "(T) "
-               : lo == GameResult::DRAW && up == GameResult::WHITE_WON ? "(W) "
-               : lo == GameResult::BLACK_WON && up == GameResult::DRAW ? "(L) "
-                                                                       : "");
+      *oss << (lo == up ? "(T:  -.----) "
+               : lo == GameResult::DRAW && up == GameResult::WHITE_WON
+                   ? "(W:  -.----) "
+               : lo == GameResult::BLACK_WON && up == GameResult::DRAW
+                   ? "(L:  -.----) "
+                   : "");
     }
   };
 
@@ -550,7 +552,6 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node,
 
   // Mark the start of the current node.
   infos.emplace_back("TREE INFO START NODE");
-  infos.emplace_back("IS BLACK TO PLAY? " + std::to_string(black_to_move));
 
   if (is_root) {
     // Get the FEN of the current position.
@@ -2401,6 +2402,7 @@ void SearchWorker::DoBackupUpdate() {
 
 void SearchWorker::DoBackupUpdateSingleNode(
     const NodeToProcess& node_to_process) REQUIRES(search_->nodes_mutex_) {
+  // TODO: STORE EVALUATION ORDER HERE!
   Node* node = node_to_process.node;
   if (node_to_process.IsCollision()) {
     // Collisions are handled via shared_collisions instead.
