@@ -578,6 +578,13 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node,
     infos.emplace_back(path_str);
   }
 
+  // Get the current node's visitation index.
+  std::string index_str =
+      "TREE INFO INDEX: " + std::to_string(node->GetVisitOrder()) +
+      " MULTIPLE VISITS: " + std::to_string(node->GetVisitedBefore());
+
+  infos.emplace_back(index_str);
+
   const auto m_evaluator = network_->GetCapabilities().has_mlh()
                                ? MEvaluator(params_, node)
                                : MEvaluator();
@@ -2373,6 +2380,14 @@ void SearchWorker::DoBackupUpdateSingleNode(
     // Collisions are handled via shared_collisions instead.
     return;
   }
+
+  // Check if this node has already been visited before
+  if (node->GetVisitOrder() != -1) {
+    node->SetVisitedBefore();
+  }
+
+  // Set the visit order for this node
+  node->SetVisitOrder(search_->visit_count_++);
 
   // For the first visit to a terminal, maybe update parent bounds too.
   auto update_parent_bounds =

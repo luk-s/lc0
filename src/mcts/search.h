@@ -98,6 +98,9 @@ class Search {
   // Returns NN eval for a given node from cache, if that node is cached.
   NNCacheLock GetCachedNNEval(const Node* node) const;
 
+  // Used to assign the order of visits to nodes.
+  std::atomic<std::int64_t> visit_count_{0};
+
  private:
   // Computes the best move, maybe with temperature (according to the settings).
   void EnsureBestMoveKnown();
@@ -229,9 +232,7 @@ class SearchWorker {
     search_->network_->InitThread(id);
     for (int i = 0; i < params.GetTaskWorkersPerSearchWorker(); i++) {
       task_workspaces_.emplace_back();
-      task_threads_.emplace_back([this, i]() {
-        this->RunTasks(i);
-      });
+      task_threads_.emplace_back([this, i]() { this->RunTasks(i); });
     }
   }
 

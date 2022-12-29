@@ -249,20 +249,32 @@ class Node {
   // Debug information about the node.
   std::string DebugString() const;
 
-  // Returns whether the nod has already been visited
+  // Returns whether the node has already been visited
   bool GetDebugVisited() const { return debug_visited_; }
-  // Changes the visited flag (if necessary recursively)
+  // Changes the debug visited flag (if necessary recursively)
   void ChangeDebugVisitedFlag(bool value, bool recursive = true);
 
-  // Sets the visited flag to true
+  // Sets the debug visited flag to true
   void SetDebugVisited(bool recursive) {
     ChangeDebugVisitedFlag(true, recursive);
   }
 
-  // Recursively unsets the visited flag to false
+  // Recursively unsets the debug visited flag to false
   void UnsetDebugVisited(bool recursive) {
     ChangeDebugVisitedFlag(false, recursive);
   }
+
+  // Get the search visited flag
+  bool GetVisitedBefore() const { return visited_before; }
+
+  // Set the search visited flag to true
+  void SetVisitedBefore() { visited_before = true; }
+
+  // Returns the visit order value of the node
+  int64_t GetVisitOrder() const { return visit_order_; }
+
+  // Sets the visit order value of the node
+  void SetVisitOrder(int64_t order) { visit_order_ = order; }
 
   // Reallocates this nodes children to be in a solid block, if possible and not
   // already done. Returns true if the transformation was performed.
@@ -312,6 +324,9 @@ class Node {
   // Pointer to a next sibling. nullptr if there are no further siblings.
   // Also null in the solid case.
   std::unique_ptr<Node> sibling_;
+  // Visitation index denoting the order in which the node was visited.
+  // -1 means that the node was never visited.
+  int64_t visit_order_ = -1;
 
   // 4 byte fields.
   // Averaged draw probability. Works similarly to WL, except that D is not
@@ -342,8 +357,10 @@ class Node {
   GameResult upper_bound_ : 2;
   // Whether the child_ is actually an array of equal length to edges.
   bool solid_children_ : 1;
-  // Whether this node has already been visited.
+  // Whether this node has already been visited during debug traversal
   bool debug_visited_ = false;
+  // Whether this node has already been visited during the current search
+  bool visited_before = false;
 
   // TODO(mooskagh) Unfriend NodeTree.
   friend class NodeTree;
