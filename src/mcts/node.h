@@ -371,6 +371,14 @@ class Node {
   friend class VisitedNode_Iterator<false>;
 };
 
+// TEMP code to check at compile time the size of the Node class.
+template <size_t s>
+struct TAssertIs64Bytes {
+  static_assert(s == 64, "Unexpected size of Node. Got: ");
+  static constexpr bool _cResult = (s == 64);
+};
+static constexpr bool _is_correct = TAssertIs64Bytes<sizeof(Node)>::_cResult;
+
 // Define __i386__  or __arm__ also for 32 bit Windows.
 #if defined(_M_IX86)
 #define __i386__
