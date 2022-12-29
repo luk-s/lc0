@@ -550,8 +550,18 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node,
 
   std::vector<std::string> infos;
 
+  // Get the current node's visitation index.
+  int64_t index = node->GetVisitOrder();
+  bool visited_before = node->GetVisitedBefore();
+
+  // Get the id of the parent node. Set to -1 if the node is the root.
+  int64_t parent_id =
+      node->GetParent() != nullptr ? node->GetParent()->GetVisitOrder() : -1;
+
   // Mark the start of the current node.
-  infos.emplace_back("TREE INFO START NODE");
+  infos.emplace_back("TREE INFO START NODE: " + std::to_string(index) +
+                     " PARENT: " + std::to_string(parent_id) +
+                     " VISITED_BEFORE: " + std::to_string(visited_before));
 
   if (is_root) {
     // Get the FEN of the current position.
@@ -577,20 +587,6 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node,
 
     infos.emplace_back(path_str);
   }
-
-  // Get the current node's visitation index.
-  std::string index_str =
-      "TREE INFO INDEX: " + std::to_string(node->GetVisitOrder()) +
-      " MULTIPLE VISITS: " + std::to_string(node->GetVisitedBefore());
-
-  infos.emplace_back(index_str);
-
-  // Get the id of the parent node. Set to -1 if the node is the root.
-  int64_t parent_id =
-      node->GetParent() != nullptr ? node->GetParent()->GetVisitOrder() : -1;
-  std::string parent_str = "TREE INFO PARENT: " + std::to_string(parent_id);
-
-  infos.emplace_back(parent_str);
 
   const auto m_evaluator = network_->GetCapabilities().has_mlh()
                                ? MEvaluator(params_, node)
