@@ -371,14 +371,6 @@ class Node {
   friend class VisitedNode_Iterator<false>;
 };
 
-// TEMP code to check at compile time the size of the Node class.
-template <size_t s>
-struct TAssertIs64Bytes {
-  static_assert(s == 64, "Unexpected size of Node. Got: ");
-  static constexpr bool _cResult = (s == 64);
-};
-static constexpr bool _is_correct = TAssertIs64Bytes<sizeof(Node)>::_cResult;
-
 // Define __i386__  or __arm__ also for 32 bit Windows.
 #if defined(_M_IX86)
 #define __i386__
@@ -389,9 +381,9 @@ static constexpr bool _is_correct = TAssertIs64Bytes<sizeof(Node)>::_cResult;
 
 // A basic sanity check. This must be adjusted when Node members are adjusted.
 #if defined(__i386__) || (defined(__arm__) && !defined(__aarch64__))
-static_assert(sizeof(Node) == 48, "Unexpected size of Node for 32bit compile");
+static_assert(sizeof(Node) == 56, "Unexpected size of Node for 32bit compile");
 #else
-static_assert(sizeof(Node) == 64, "Unexpected size of Node");
+static_assert(sizeof(Node) == 72, "Unexpected size of Node");
 #endif
 
 // Contains Edge and Node pair and set of proxy functions to simplify access
