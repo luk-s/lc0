@@ -585,6 +585,13 @@ std::vector<std::string> Search::GetMctsNodeStats(Node* node,
 
   infos.emplace_back(index_str);
 
+  // Get the id of the parent node. Set to -1 if the node is the root.
+  int64_t parent_id =
+      node->GetParent() != nullptr ? node->GetParent()->GetVisitOrder() : -1;
+  std::string parent_str = "TREE INFO PARENT: " + std::to_string(parent_id);
+
+  infos.emplace_back(parent_str);
+
   const auto m_evaluator = network_->GetCapabilities().has_mlh()
                                ? MEvaluator(params_, node)
                                : MEvaluator();
