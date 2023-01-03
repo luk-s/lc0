@@ -2387,10 +2387,10 @@ void SearchWorker::DoBackupUpdateSingleNode(
   // Check if this node has already been visited before
   if (node->GetVisitOrder() != -1) {
     node->SetVisitedBefore();
+  } else {
+    // Set the visit order for this node
+    node->SetVisitOrder(search_->visit_count_++);
   }
-
-  // Set the visit order for this node
-  node->SetVisitOrder(search_->visit_count_++);
 
   // For the first visit to a terminal, maybe update parent bounds too.
   auto update_parent_bounds =
