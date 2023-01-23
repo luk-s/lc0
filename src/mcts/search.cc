@@ -305,8 +305,8 @@ void Search::MaybeOutputInfo(const IterationStats& stats,
   SharedMutex::Lock lock(nodes_mutex_);
   Mutex::Lock counters_lock(counters_mutex_);
   if (params_.GetVerboseStatsEveryNode() && valid &&
-      last_total_nodes_ != stats->total_nodes) {
-    last_total_nodes_ = stats->total_nodes;
+      last_total_nodes_ != stats.total_nodes) {
+    last_total_nodes_ = stats.total_nodes;
     SendMovesStats();
   } else if (!bestmove_is_sent_ && current_best_edge_ &&
              (current_best_edge_.edge() != last_outputted_info_edge_ ||
