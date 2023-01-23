@@ -322,7 +322,7 @@ const OptionId SearchParams::kMctsTreeStatsId{
 const OptionId SearchParams::kVerboseStatsEveryNodeId{
     "verbose-stats-every-node", "VerboseStatsEveryNode",
     "If true, print out verbose stats after every node."};
-}
+};
 
 void SearchParams::Populate(OptionsParser* options) {
   // Here the uci optimized defaults" are set.

@@ -297,6 +297,11 @@ void Search::SendUciInfo() REQUIRES(nodes_mutex_) REQUIRES(counters_mutex_) {
 // Decides whether anything important changed in stats and new info should be
 // shown to a user.
 void Search::MaybeOutputInfo() {
+  IterationStats fake_stats;
+  MaybeOutputInfo(fake_stats, false);
+}
+void Search::MaybeOutputInfo(const IterationStats& stats,
+                             const bool valid = true) {
   SharedMutex::Lock lock(nodes_mutex_);
   Mutex::Lock counters_lock(counters_mutex_);
   if (params_.GetVerboseStatsEveryNode() &&
@@ -2544,7 +2549,7 @@ bool SearchWorker::MaybeSetBounds(Node* p, float m, int* n_to_fix,
 void SearchWorker::UpdateCounters() {
   search_->PopulateCommonIterationStats(&iteration_stats_);
   search_->MaybeTriggerStop(iteration_stats_, &latest_time_manager_hints_);
-  search_->MaybeOutputInfo();
+  search_->MaybeOutputInfo(iteration_stats_);
 
   // If this thread had no work, not even out of order, then sleep for some
   // milliseconds. Collisions don't count as work, so have to enumerate to find
