@@ -319,6 +319,10 @@ const OptionId SearchParams::kMaxCollisionVisitsScalingPowerId{
 const OptionId SearchParams::kMctsTreeStatsId{
     "mcts-tree-stats", "MctsTreeStats",
     "If true, print out the MCTS tree at the end of the search."};
+const OptionId SearchParams::kVerboseStatsEveryNodeId{
+    "verbose-stats-every-node", "VerboseStatsEveryNode",
+    "If true, print out verbose stats after every node."};
+}
 
 void SearchParams::Populate(OptionsParser* options) {
   // Here the uci optimized defaults" are set.
@@ -401,6 +405,7 @@ void SearchParams::Populate(OptionsParser* options) {
   options->Add<IntOption>(kIdlingMinimumWorkId, 0, 10000) = 0;
   options->Add<IntOption>(kThreadIdlingThresholdId, 0, 128) = 1;
   options->Add<BoolOption>(kMctsTreeStatsId) = false;
+  options->Add<BoolOption>(kVerboseStatsEveryNodeId) = false;
 
   options->HideOption(kNoiseEpsilonId);
   options->HideOption(kNoiseAlphaId);

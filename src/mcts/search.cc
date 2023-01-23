@@ -299,14 +299,18 @@ void Search::SendUciInfo() REQUIRES(nodes_mutex_) REQUIRES(counters_mutex_) {
 void Search::MaybeOutputInfo() {
   SharedMutex::Lock lock(nodes_mutex_);
   Mutex::Lock counters_lock(counters_mutex_);
-  if (!bestmove_is_sent_ && current_best_edge_ &&
-      (current_best_edge_.edge() != last_outputted_info_edge_ ||
-       last_outputted_uci_info_.depth !=
-           static_cast<int>(cum_depth_ /
-                            (total_playouts_ ? total_playouts_ : 1)) ||
-       last_outputted_uci_info_.seldepth != max_depth_ ||
-       last_outputted_uci_info_.time + kUciInfoMinimumFrequencyMs <
-           GetTimeSinceStart())) {
+  if (params_.GetVerboseStatsEveryNode() &&
+      last_total_nodes_ != iteration_stats_->total_nodes) {
+    last_total_nodes_ = iteration_stats_->total_nodes;
+    SendMovesStats();
+  } else if (!bestmove_is_sent_ && current_best_edge_ &&
+             (current_best_edge_.edge() != last_outputted_info_edge_ ||
+              last_outputted_uci_info_.depth !=
+                  static_cast<int>(cum_depth_ /
+                                   (total_playouts_ ? total_playouts_ : 1)) ||
+              last_outputted_uci_info_.seldepth != max_depth_ ||
+              last_outputted_uci_info_.time + kUciInfoMinimumFrequencyMs <
+                  GetTimeSinceStart())) {
     SendUciInfo();
     if (params_.GetLogLiveStats()) {
       SendMovesStats();

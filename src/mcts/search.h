@@ -192,6 +192,9 @@ class Search {
   std::atomic<int> tb_hits_{0};
   const MoveList root_move_filter_;
 
+  // The last total number of nodes visited
+  int64_t last_total_nodes_ = 0;
+
   mutable SharedMutex nodes_mutex_;
   EdgeAndNode current_best_edge_ GUARDED_BY(nodes_mutex_);
   Edge* last_outputted_info_edge_ GUARDED_BY(nodes_mutex_) = nullptr;

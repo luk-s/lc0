@@ -139,6 +139,9 @@ class SearchParams {
     return kMaxCollisionVisitsScalingPower;
   }
   bool GetMctsTreeStats() const { return options_.Get<bool>(kMctsTreeStatsId); }
+  bool GetVerboseStatsEveryNode() const {
+    return options_.Get<bool>(kVerboseStatsEveryNodeId);
+  }
 
   // Search parameter IDs.
   static const OptionId kMiniBatchSizeId;
@@ -203,6 +206,7 @@ class SearchParams {
   static const OptionId kMaxCollisionVisitsScalingEndId;
   static const OptionId kMaxCollisionVisitsScalingPowerId;
   static const OptionId kMctsTreeStatsId;
+  static const OptionId kVerboseStatsEveryNodeId;
 
  private:
   const OptionsDict& options_;
