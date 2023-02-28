@@ -2334,7 +2334,7 @@ void SearchWorker::FetchSingleNodeResult(NodeToProcess* node_to_process,
   // containing some invalid value).
   if (std::isnan(node_to_process->v) || std::isinf(node_to_process->v) ||
       node_to_process->v < -1.0f || node_to_process->v > 1.0f) {
-    const Position& current_position = played_history_.Last();
+    const Position& current_position = history_.Last();
     // Print an error message containing the position and the q value.
     std::cerr << "ERROR: invalid q value " << node_to_process->v
               << " for position:" << GetFen(current_position) << std::endl;
