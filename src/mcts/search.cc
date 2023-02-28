@@ -2329,6 +2329,17 @@ void SearchWorker::FetchSingleNodeResult(NodeToProcess* node_to_process,
   node_to_process->v = -computation.GetQVal(idx_in_computation);
   node_to_process->d = computation.GetDVal(idx_in_computation);
   node_to_process->m = computation.GetMVal(idx_in_computation);
+
+  // Check if the q value is erroneous (i.e. outside of the expected range or
+  // containing some invalid value).
+  if (std::isnan(node_to_process->v) || std::isinf(node_to_process->v) ||
+      node_to_process->v < -1.0f || node_to_process->v > 1.0f) {
+    const Position& current_position = played_history_.Last();
+    // Print an error message containing the position and the q value.
+    std::cerr << "ERROR: invalid q value " << node_to_process->v
+              << " for position:" << GetFen(current_position) << std::endl;
+  }
+
   // ...and secondly, the policy data.
   // Calculate maximum first.
   float max_p = -std::numeric_limits<float>::infinity();
